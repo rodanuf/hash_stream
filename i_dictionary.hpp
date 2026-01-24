@@ -16,5 +16,5 @@ public:
     virtual void add(const t_key& key, const t_value& value) = 0;
     virtual void remove(const t_key& key) = 0;
 
-    virtual iterator<t_key> *get_keys_iterator() const = 0;
+    virtual i_iterator<t_key> *get_keys_iterator() const = 0;
 };
