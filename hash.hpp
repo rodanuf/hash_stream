@@ -59,15 +59,12 @@ public:
     hash_table<t_key, U> map(std::function<U(const t_value &)> func) const;
 
     template <typename U>
-    U reduce(U initial_value, std::function<U(U, const t_value &)> func) const;
+    U reduce(const U &initial_value, std::function<U(U, const t_value &)> func) const;
 
     hash_table<t_key, t_value> where(std::function<bool(const t_value &)> predicate) const;
 
     hash_table<t_key, t_value>& filter(std::function<bool(const t_value &)> predicate);
     hash_table<t_key, t_value>& map_mutable(std::function<t_value(const t_value &)> func);
-
-    list_sequence<t_key> select_keys() const;
-    list_sequence<t_value> select_values() const;
 
     i_iterator<t_key> *get_keys_iterator() const override;
 

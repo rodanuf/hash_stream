@@ -255,6 +255,236 @@ TEST(hash_table_test, method_get_bucket_distribution)
     EXPECT_EQ(total_elements, 10);
 }
 
+TEST(hash_table_test, method_map)
+{
+    hash_table<int, int> table(simple_int_hash);
+
+    table.set(1, 10);
+    table.set(2, 20);
+    table.set(3, 30);
+
+    auto to_string_func = [](const int &value)
+    {
+        return "value_" + std::to_string(value);
+    };
+
+    auto mapped_table = table.map<std::string>(to_string_func);
+
+    EXPECT_EQ(mapped_table.get_count(), 3);
+    EXPECT_EQ(mapped_table.get(1), "value_10");
+    EXPECT_EQ(mapped_table.get(2), "value_20");
+    EXPECT_EQ(mapped_table.get(3), "value_30");
+}
+
+TEST(hash_table_test, method_reduce)
+{
+    hash_table<int, int> table(simple_int_hash);
+
+    table.set(1, 10);
+    table.set(2, 20);
+    table.set(3, 30);
+
+    auto sum_func = [](int acc, const int &value)
+    {
+        return acc + value;
+    };
+
+    int total = table.reduce<int>(0, sum_func);
+
+    EXPECT_EQ(total, 60);
+}
+
+TEST(hash_table_test, method_reduce_string_concatenation)
+{
+    hash_table<int, std::string> table(simple_int_hash);
+
+    table.set(1, "Hello");
+    table.set(2, " ");
+    table.set(3, "World");
+
+    auto concat_func = [](std::string acc, const std::string &value)
+    {
+        return acc + value;
+    };
+
+    std::string result = table.reduce<std::string>("", concat_func);
+
+    EXPECT_EQ(result, "Hello World");
+}
+
+TEST(hash_table_test, method_where)
+{
+    hash_table<int, int> table(simple_int_hash);
+
+    for (int i = 1; i <= 10; i++)
+    {
+        table.set(i, i);
+    }
+
+    auto is_even = [](const int &value)
+    {
+        return value % 2 == 0;
+    };
+
+    auto filtered_table = table.where(is_even);
+
+    EXPECT_EQ(filtered_table.get_count(), 5);
+
+    EXPECT_TRUE(filtered_table.contains_key(2));
+    EXPECT_TRUE(filtered_table.contains_key(4));
+    EXPECT_TRUE(filtered_table.contains_key(6));
+    EXPECT_TRUE(filtered_table.contains_key(8));
+    EXPECT_TRUE(filtered_table.contains_key(10));
+
+    EXPECT_FALSE(filtered_table.contains_key(1));
+    EXPECT_FALSE(filtered_table.contains_key(3));
+    EXPECT_FALSE(filtered_table.contains_key(5));
+}
+
+TEST(hash_table_test, method_filter)
+{
+    hash_table<int, int> table(simple_int_hash);
+
+    for (int i = 1; i <= 10; i++)
+    {
+        table.set(i, i);
+    }
+
+    EXPECT_EQ(table.get_count(), 10);
+
+    auto greater_than_five = [](const int &value)
+    {
+        return value > 5;
+    };
+
+    table.filter(greater_than_five);
+
+    EXPECT_EQ(table.get_count(), 5);
+
+    for (int i = 1; i <= 10; i++)
+    {
+        if (i > 5)
+        {
+            EXPECT_TRUE(table.contains_key(i));
+            EXPECT_EQ(table.get(i), i);
+        }
+        else
+        {
+            EXPECT_FALSE(table.contains_key(i));
+        }
+    }
+}
+
+TEST(hash_table_test, method_map_mutable)
+{
+    hash_table<int, int> table(simple_int_hash);
+
+    table.set(1, 10);
+    table.set(2, 20);
+    table.set(3, 30);
+
+    auto double_func = [](const int &value)
+    {
+        return value * 2;
+    };
+
+    table.map_mutable(double_func);
+
+    EXPECT_EQ(table.get(1), 20);
+    EXPECT_EQ(table.get(2), 40);
+    EXPECT_EQ(table.get(3), 60);
+}
+
+TEST(hash_table_test, method_map_mutable_strings)
+{
+    hash_table<int, std::string> table(simple_int_hash);
+
+    table.set(1, "apple");
+    table.set(2, "banana");
+    table.set(3, "cherry");
+
+    auto to_upper_func = [](const std::string &value)
+    {
+        std::string result = value;
+        for (char &c : result)
+        {
+            c = std::toupper(c);
+        }
+        return result;
+    };
+
+    table.map_mutable(to_upper_func);
+
+    EXPECT_EQ(table.get(1), "APPLE");
+    EXPECT_EQ(table.get(2), "BANANA");
+    EXPECT_EQ(table.get(3), "CHERRY");
+}
+
+TEST(hash_table_test, chain_map_where_reduce)
+{
+    hash_table<int, int> table(simple_int_hash);
+
+    for (int i = 1; i <= 5; i++)
+    {
+        table.set(i, i * 10);
+    }
+
+    auto greater_than_25 = [](const int &value)
+    {
+        return value > 25;
+    };
+
+    auto filtered = table.where(greater_than_25);
+
+    auto add_five = [](const int &value)
+    {
+        return value + 5;
+    };
+
+    auto mapped = filtered.map<int>(add_five);
+
+    auto sum_func = [](int acc, const int &value)
+    {
+        return acc + value;
+    };
+
+    int total = mapped.reduce<int>(0, sum_func);
+
+    EXPECT_EQ(total, 135);
+}
+
+TEST(hash_table_test, empty_table_operations)
+{
+    hash_table<int, int> table(simple_int_hash);
+
+    auto to_string_func = [](const int &value)
+    {
+        return std::to_string(value);
+    };
+
+    auto mapped = table.map<std::string>(to_string_func);
+    EXPECT_EQ(mapped.get_count(), 0);
+
+    auto sum_func = [](int acc, const int &value)
+    {
+        return acc + value;
+    };
+
+    int total = table.reduce<int>(100, sum_func); 
+    EXPECT_EQ(total, 100);
+
+    auto always_true = [](const int &value)
+    {
+        return true;
+    };
+
+    auto filtered = table.where(always_true);
+    EXPECT_EQ(filtered.get_count(), 0);
+
+    table.filter(always_true);
+    EXPECT_EQ(table.get_count(), 0);
+}
+
 TEST(hash_table_test, collisions_handling)
 {
     auto collision_hash = [](const int &key)

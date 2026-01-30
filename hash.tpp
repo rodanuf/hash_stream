@@ -231,8 +231,105 @@ array_sequence<int> hash_table<t_key, t_value>::get_bucket_distribution() const
 }
 
 template <typename t_key, typename t_value>
+template <typename U>
+hash_table<t_key, U> hash_table<t_key, t_value>::map(std::function<U(const t_value &)> func) const
+{
+    hash_table<t_key, U> result(hash_function, capacity);
+
+    for (int i = 0; i < buckets.get_length(); i++)
+    {
+        for (int j = 0; j < buckets[i].get_length(); j++)
+        {
+            result.set(buckets[i].get(j).key, func(buckets[i].get(j).value));
+        }
+    }
+    return result;
+}  
+
+template <typename t_key, typename t_value>
+template <typename U>
+U hash_table<t_key, t_value>::reduce(const U &initial_value, std::function<U(U, const t_value &)> func) const
+{
+    U result = initial_value;
+
+    for (int i = 0; i < buckets.get_length(); i++)
+    {
+        for (int j = 0; j < buckets[i].get_length(); j++)
+        {
+            result = func(result, buckets[i].get(j).value);
+        }
+    }
+
+    return result;
+}
+
+template <typename t_key, typename t_value>
+hash_table<t_key, t_value> hash_table<t_key, t_value>::where(std::function<bool(const t_value &)> predicate) const 
+{
+    hash_table<t_key, t_value> result(hash_function, capacity);
+
+    for (int i = 0; i < buckets.get_length(); i++)
+    {
+        for (int j = 0; j < buckets[i].get_length(); j++)
+        {
+            if (predicate(buckets[i].get(j).value))
+            {
+                result.set(buckets[i].get(j).key, buckets[i].get(j).value);
+            }
+        }
+    }
+
+    return result;
+}
+
+template <typename t_key, typename t_value>
+hash_table<t_key, t_value> &hash_table<t_key, t_value>::filter(std::function<bool(const t_value &)> predicate)
+{
+    for (int i = 0; i < buckets.get_length(); i++)
+    {
+        for (int j = buckets[i].get_length() - 1; j >= 0; j--)
+        {
+            if (!predicate(buckets[i].get(j).value))
+            {
+                this->del(buckets[i].get(j).key);
+            }
+        }   
+    }
+
+    return *this;
+} 
+
+template <typename t_key, typename t_value>
+hash_table<t_key, t_value> &hash_table<t_key, t_value>::map_mutable(std::function<t_value(const t_value &)> func)
+{
+    for (int i = 0; i < buckets.get_length(); i++)
+    {
+        for (int j = 0; j < buckets[i].get_length(); j++)
+        {
+            buckets[i].get(j).value = func(buckets[i].get(j).value);
+        }
+    }
+
+    return *this;
+}
+
+template <typename t_key, typename t_value>
 i_iterator<t_key> *hash_table<t_key, t_value>::get_keys_iterator() const
 {
     i_iterator<t_key> *iterator = new i_iterator<t_key>();
     return iterator;
+}
+
+template <typename t_key, typename t_value>
+shared_ptr<typename hash_table<t_key, t_value>::entry> hash_table<t_key, t_value>::find_in_bucket(int index, const t_key &key)
+{
+    auto &bucket = buckets[index];
+    for (int i = 0; i < bucket.get_length(); i++)
+    {
+        if (bucket.get(i).key == key)
+        {
+            return shared_ptr<entry>(&bucket.get(i));
+        }
+    }
+    return shared_ptr<entry>();
 }
