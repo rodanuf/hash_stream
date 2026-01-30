@@ -1,5 +1,7 @@
 #pragma once 
 
+#include "i_iterator.hpp"
+
 template <typename t_key, typename t_value>
 class i_dictionary 
 {

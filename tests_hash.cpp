@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "hash.hpp"
+#include "hash_table/hash.hpp"
 #include <functional>
 
 auto simple_int_hash = [](const int &key)

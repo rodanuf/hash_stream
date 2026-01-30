@@ -1,9 +1,6 @@
 #include "hash.hpp"
+#include "hash_table_iterator.hpp"
 #include <stdexcept>
-
-template <typename t_key, typename t_value>
-hash_table<t_key, t_value>::entry::entry(const t_key& key, const t_value& value)
-    : key(key), value(value) {}
 
 template <typename t_key, typename t_value>
 hash_table<t_key, t_value>::hash_table(const std::function<int(const t_key&)> &hash_func, int capacity)
@@ -14,7 +11,7 @@ hash_table<t_key, t_value>::hash_table(const std::function<int(const t_key&)> &h
         throw std::invalid_argument("Capacity must be positive");
     }
 
-    buckets = array_sequence<list_sequence<entry>>(capacity);
+    buckets = array_sequence<list_sequence<entry<t_key, t_value>>>(capacity);
 }
 
 template <typename t_key, typename t_value>
@@ -72,7 +69,7 @@ hash_table<t_key, t_value> &hash_table<t_key, t_value>::set(const t_key &key, co
             }
         }
     }
-    bucket.append_element(entry(key, value));
+    bucket.append_element(entry<t_key, t_value>(key, value));
     count++;
     resize_if_needed();
     return *this;
@@ -129,9 +126,9 @@ hash_table<t_key, t_value> &hash_table<t_key, t_value>::rehash(int new_capacity)
         return *this;
     }
 
-    array_sequence<list_sequence<entry>> old_buckets = buckets;
+    array_sequence<list_sequence<entry<t_key, t_value>>> old_buckets = buckets;
     buckets.clear();
-    buckets = array_sequence<list_sequence<entry>>(new_capacity);
+    buckets = array_sequence<list_sequence<entry<t_key, t_value>>>(new_capacity);
     capacity = new_capacity;
 
     for (int i = 0; i < (old_buckets.get_length() < new_capacity ? old_buckets.get_length() : new_capacity); i++)
@@ -146,9 +143,9 @@ template <typename t_key, typename t_value>
 hash_table<t_key, t_value> &hash_table<t_key, t_value>::resize()
 {
     capacity *= 2;    
-    array_sequence<list_sequence<entry>> old_buckets = buckets;
+    array_sequence<list_sequence<entry<t_key, t_value>>> old_buckets = buckets;
     buckets.clear();
-    buckets = array_sequence<list_sequence<entry>>(capacity);
+    buckets = array_sequence<list_sequence<entry<t_key, t_value>>>(capacity);
 
     for (int i = 0; i < old_buckets.get_length(); i++)
     {
@@ -316,20 +313,20 @@ hash_table<t_key, t_value> &hash_table<t_key, t_value>::map_mutable(std::functio
 template <typename t_key, typename t_value>
 i_iterator<t_key> *hash_table<t_key, t_value>::get_keys_iterator() const
 {
-    i_iterator<t_key> *iterator = new i_iterator<t_key>();
+    hash_table_iterator<t_key, t_value> *iterator = new hash_table_iterator<t_key, t_value>(buckets);
     return iterator;
 }
 
 template <typename t_key, typename t_value>
-shared_ptr<typename hash_table<t_key, t_value>::entry> hash_table<t_key, t_value>::find_in_bucket(int index, const t_key &key)
+shared_ptr<entry<t_key, t_value>> hash_table<t_key, t_value>::find_in_bucket(int index, const t_key &key)
 {
     auto &bucket = buckets[index];
     for (int i = 0; i < bucket.get_length(); i++)
     {
         if (bucket.get(i).key == key)
         {
-            return shared_ptr<entry>(&bucket.get(i));
+            return shared_ptr<entry<t_key, t_value>>(&bucket.get(i));
         }
     }
-    return shared_ptr<entry>();
+    return shared_ptr<entry<t_key, t_value>>();
 }

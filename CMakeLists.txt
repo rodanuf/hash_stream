@@ -17,7 +17,7 @@ add_subdirectory(googletest EXCLUDE_FROM_ALL)
 
 add_executable(tests
     main_tests.cpp
-    hash.hpp
+    hash_table/hash.hpp
 )
 
 target_compile_features(tests PRIVATE cxx_std_20)

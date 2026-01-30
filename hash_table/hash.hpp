@@ -1,25 +1,20 @@
 #pragma once
 
-#include "lab3_2ndsem/headers/array_sequence.hpp"
-#include "lab3_2ndsem/headers/list_sequence.hpp"
-#include "pointers/shared_ptr.hpp"
-#include "i_iterator.hpp"
-#include "i_dictionary.hpp"
+#include "../pointers/shared_ptr.hpp"
+#include "../i_dictionary.hpp"
+#include "entry.hpp"
+#include "../lab3_2ndsem/headers/array_sequence.hpp"
+#include "../lab3_2ndsem/headers/list_sequence.hpp"
+#include "../i_iterator.hpp"
 #include <functional>
+
+template <typename t_key, typename t_value> class hash_table_iterator;
 
 template <typename t_key, typename t_value>
 class hash_table : public i_dictionary<t_key, t_value> 
 {
 private:
-    struct entry 
-    {
-        t_key key;
-        t_value value;
-
-        entry(const t_key &key, const t_value &value);
-    };
-
-    array_sequence<list_sequence<entry>> buckets;
+    array_sequence<list_sequence<entry<t_key, t_value>>> buckets;
     int count;
     int capacity;
 
@@ -69,7 +64,7 @@ public:
     i_iterator<t_key> *get_keys_iterator() const override;
 
 private:
-    shared_ptr<entry> find_in_bucket(int index, const t_key &key);
+    shared_ptr<entry<t_key, t_value>> find_in_bucket(int index, const t_key &key);
 
 };
 
