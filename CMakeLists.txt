@@ -31,3 +31,14 @@ target_link_libraries(tests PRIVATE gtest gtest_main)
 
 enable_testing()
 add_test(NAME AllTests COMMAND tests)
+
+add_executable(benchmark
+    benchmark_cache.cpp
+    benchmark_utils.hpp
+    hash_table/hash.hpp
+    file_stream/file_stream.hpp
+    cache.hpp
+)
+
+target_compile_features(benchmark PRIVATE cxx_std_20)
+target_include_directories(benchmark PRIVATE ${CMAKE_SOURCE_DIR})

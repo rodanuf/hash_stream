@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../i_iterator.hpp"
+#include "i_iterator.hpp"
 #include "../pointers\uniq_ptr.hpp"
 #include "entry.hpp"
 #include "../lab3_2ndsem/headers/array_sequence.hpp"

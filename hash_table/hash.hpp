@@ -1,11 +1,11 @@
 #pragma once
 
 #include "../pointers/shared_ptr.hpp"
-#include "../i_dictionary.hpp"
+#include "i_dictionary.hpp"
 #include "entry.hpp"
 #include "../lab3_2ndsem/headers/array_sequence.hpp"
 #include "../lab3_2ndsem/headers/list_sequence.hpp"
-#include "../i_iterator.hpp"
+#include "i_iterator.hpp"
 #include <functional>
 
 template <typename t_key, typename t_value> class hash_table_iterator;
