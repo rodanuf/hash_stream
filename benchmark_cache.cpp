@@ -78,3 +78,9 @@ void benchmark_scenario()
             << r.hit_ratio << "\n";
     }
 }
+
+int main()
+{
+    benchmark_scenario();
+    return 0;
+}

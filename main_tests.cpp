@@ -1,8 +1,6 @@
 #include <gtest/gtest.h>
 #include "hash_table/hash.hpp"
 
-#include "tests_hash.cpp"
-
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
