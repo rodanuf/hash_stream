@@ -25,7 +25,7 @@ benchmark_result run_cache_benchmark(
     auto hash_fn = [](int k)
     { return k % 1000; };
 
-    cache<int, int> my_cache(cache_size, 30, hash_fn, db_file);
+    cache<int, int> my_cache(cache_size, 50, hash_fn, db_file);
     my_cache.reset_statistics();
 
     auto start = std::chrono::high_resolution_clock::now();

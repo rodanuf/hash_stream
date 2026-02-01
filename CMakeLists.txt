@@ -18,7 +18,7 @@ add_subdirectory(googletest EXCLUDE_FROM_ALL)
 add_executable(tests
     main_tests.cpp
     tests_hash.cpp
-    test.cpp
+    tests_iterator.cpp
     hash_table/hash.hpp
 )
 

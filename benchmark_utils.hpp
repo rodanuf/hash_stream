@@ -11,7 +11,7 @@ void generate_database(const std::string &file_path, int size)
     file_stream<entry<t_key, t_value>> stream(file_path);
     stream.move_position(0);
 
-    const int HOT_KEYS = 30;
+    const int HOT_KEYS = 50;
     const int COLD_KEYS = 100;
     const int COLD_KEYS_START = 1000;
 
@@ -50,7 +50,7 @@ array_sequence<int> generate_workload(int total_requests)
     std::mt19937 gen(123);
     std::uniform_real_distribution<> prob_dist(0.0, 1.0);
 
-    const int HOT_KEYS = 30;
+    const int HOT_KEYS = 50;
     const int COLD_KEYS = 100;
     const int COLD_KEYS_START = 1000;
 

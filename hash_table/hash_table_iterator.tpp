@@ -32,7 +32,6 @@ bool hash_table_iterator<t_key, t_value>::has_next() const
 template <typename t_key, typename t_value>
 bool hash_table_iterator<t_key, t_value>::next() 
 {
-
     ++inner_index;
     return find_next_non_empty();
 }
@@ -47,20 +46,26 @@ bool hash_table_iterator<t_key, t_value>::try_get_current(t_key &element)
 template <typename t_key, typename t_value>
 t_key hash_table_iterator<t_key, t_value>::get_current() const
 {
+    if (current_bucket >= buckets->get_length())
+    {
+        throw std::out_of_range("Iterator is out of range");
+    }
     return buckets->get(current_bucket).get(inner_index).key;
 }
 
 template <typename t_key, typename t_value>
 bool hash_table_iterator<t_key, t_value>::find_next_non_empty()
 {
-    while (current_bucket < buckets->get_length())
+    int current_copy = current_bucket;
+    while (current_copy < buckets->get_length())
     {
-        const auto &bucket = buckets->get(current_bucket);
+        const auto &bucket = buckets->get(current_copy);
         if (inner_index < bucket.get_length())
         {
+            current_bucket = current_copy;
             return true;
         }
-        ++current_bucket;
+        ++current_copy;
         inner_index = 0;
     }
 
