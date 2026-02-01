@@ -2,8 +2,8 @@
 #include <stdexcept>
 
 template <typename t_key, typename t_value>
-cache<t_key, t_value>::cache(int cap, const std::function<int(const t_key&)> &hash_func, const std::string &stream_path)
-    : table(hash_func), stream(stream_path), capacity(cap), hit_count(0), miss_count(0)
+cache<t_key, t_value>::cache(int cap, int hot_keys, const std::function<int(const t_key&)> &hash_func, const std::string &stream_path)
+    : table(hash_func, cap*4), stream(stream_path), capacity(cap), hot_keys(hot_keys), hit_count(0), miss_count(0)
 {
     if (cap <= 0)
     {
@@ -12,12 +12,11 @@ cache<t_key, t_value>::cache(int cap, const std::function<int(const t_key&)> &ha
 }
 
 template <typename t_key, typename t_value>
-t_value cache<t_key, t_value>::get(const t_key &key) 
+t_value cache<t_key, t_value>::get(const t_key &key)
 {
     if (table.contains_key(key))
     {
         hit_count++;
-
         this->update_access_order(key);
         return table.get(key);
     }
@@ -27,8 +26,11 @@ t_value cache<t_key, t_value>::get(const t_key &key)
         t_value value;
         if (this->read_from_stream(key, value))
         {
-            table.add(key, value);
-            this->update_access_order(key);
+            if (key < hot_keys)
+            {
+                table.add(key, value);
+                this->update_access_order(key);
+            }
             return value;
         }
         else
@@ -96,9 +98,10 @@ void cache<t_key, t_value>::update_access_order(const t_key &key)
             break;
         }
     }
+
     access_order.append_element(key);
 
-    if (access_order.get_length() > capacity)
+    while (access_order.get_length() > capacity)
     {
         t_key oldest_key = access_order.get(0);
         table.remove(oldest_key);
@@ -109,31 +112,17 @@ void cache<t_key, t_value>::update_access_order(const t_key &key)
 template <typename t_key, typename t_value>
 void cache<t_key, t_value>::write_to_stream(const t_key &key, const t_value &value)
 {
-    stream.reset();
-    
-    while (true)
-    {
-        try
-        {
-            stream.read();
-        }
-        catch (...)
-        {
-            break;
-        }
-    }
-    
     stream.write(entry<t_key, t_value>(key, value));
 }
 
 template <typename t_key, typename t_value>
 bool cache<t_key, t_value>::read_from_stream(const t_key &key, t_value &value)
 {
-    stream.reset();
-    
-    while (true)
+    stream.move_position(0);
+
+    try
     {
-        try
+        while (true)
         {
             auto entry_data = stream.read();
             if (entry_data.key == key)
@@ -142,11 +131,13 @@ bool cache<t_key, t_value>::read_from_stream(const t_key &key, t_value &value)
                 return true;
             }
         }
-        catch (...)
-        {
-            break;
-        }
     }
-    
-    return false;
+    catch (const std::out_of_range &)
+    {
+        return false;
+    }
+    catch (...)
+    {
+        return false; 
+    }
 }

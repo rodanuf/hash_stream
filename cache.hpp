@@ -15,9 +15,10 @@ private:
     int capacity;
     int hit_count;
     int miss_count;
+    int hot_keys;
 
 public:
-    cache(int cap, const std::function<int(const t_key&)> &hash_func, const std::string &stream_path);
+    cache(int cap, int hot_keys, const std::function<int(const t_key&)> &hash_func, const std::string &stream_path);
     ~cache() = default;
 
     t_value get(const t_key &key);

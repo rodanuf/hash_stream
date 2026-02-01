@@ -7,6 +7,7 @@
 #include "../lab3_2ndsem/headers/list_sequence.hpp"
 #include "i_iterator.hpp"
 #include <functional>
+#include <iostream>
 
 template <typename t_key, typename t_value> class hash_table_iterator;
 

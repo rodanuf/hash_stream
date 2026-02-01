@@ -4,6 +4,8 @@
 #include "benchmark_utils.hpp"
 #include <chrono>
 #include <fstream>
+#include <iostream>
+#include <filesystem>
 
 struct benchmark_result
 {
@@ -23,20 +25,14 @@ benchmark_result run_cache_benchmark(
     auto hash_fn = [](int k)
     { return k % 1000; };
 
-    cache<int, int> my_cache(cache_size, hash_fn, db_file);
+    cache<int, int> my_cache(cache_size, 30, hash_fn, db_file);
     my_cache.reset_statistics();
 
     auto start = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < workload.get_length(); i++)
     {
-        try
-        {
-            my_cache.get(workload.get(i));
-        }
-        catch (...)
-        {
-        }
+        my_cache.get(workload.get(i));
     }
 
     auto end = std::chrono::high_resolution_clock::now();
@@ -54,10 +50,9 @@ benchmark_result run_cache_benchmark(
 void benchmark_scenario()
 {
     generate_database<int, int>("cache_db.bin", 10000);
+    auto workload = generate_workload(100000);
 
-    auto workload = generate_workload(1000, 80);
-
-    array_sequence<int> cache_sizes = {5, 10, 20, 50, 100, 200, 500};
+    array_sequence<int> cache_sizes = {5, 10, 20, 50, 100, 200, 500, 1000};
     array_sequence<benchmark_result> results;
 
     for (int i = 0; i < cache_sizes.get_length(); i++)
@@ -76,6 +71,15 @@ void benchmark_scenario()
             << r.hits << ","
             << r.misses << ","
             << r.hit_ratio << "\n";
+    }
+    std::cout << "Cache size | Hit ratio | Time (ms)\n";
+    std::cout << "-----------|-----------|-----------\n";
+    for (int i = 0; i < results.get_length(); i++)
+    {
+        const auto &r = results.get(i);
+        std::cout << r.cache_size << "        | "
+                  << r.hit_ratio * 100 << "%      | "
+                  << r.duration_ms << "\n";
     }
 }
 
